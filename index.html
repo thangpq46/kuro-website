@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kuro: Private Diary Journal — a diary only you can open</title>
+<meta name="description" content="Kuro is a private diary and journal app for Android. Lock it with a PIN or fingerprint, write with photos, voice notes and moods, dress it in 71 themes, and back it up to your own Google Drive.">
+<meta name="theme-color" content="#0a0616">
+<link rel="icon" href="assets/icon.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Kuro: Private Diary Journal">
+<meta property="og:description" content="A diary only you can open. Locked, beautiful, and backed up to your own Google Drive.">
+<meta property="og:image" content="assets/icon-512.png">
+<style>
+:root{
+  --ink:#0a0616;
+  --ink-2:#120a26;
+  --panel:rgba(255,255,255,.045);
+  --panel-line:rgba(167,139,250,.22);
+  --text:#ece9f6;
+  --muted:#a79fc4;
+  --cyan:#67e8f9;
+  --violet:#a78bfa;
+  --magenta:#f0abfc;
+  --gold:#fde68a;
+  --radius:22px;
+  --maxw:1120px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text);
+  font:16px/1.65 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{line-height:1.15;margin:0;letter-spacing:-.02em;font-weight:700}
+p{margin:0}
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+/* ---------- animated background ---------- */
+#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.9}
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.42;mix-blend-mode:screen;will-change:transform}
+.blob.b1{width:52vw;height:52vw;left:-14vw;top:-16vw;background:radial-gradient(circle,#6d28d9,transparent 62%);animation:drift1 26s ease-in-out infinite}
+.blob.b2{width:44vw;height:44vw;right:-12vw;top:4vh;background:radial-gradient(circle,#0891b2,transparent 62%);animation:drift2 32s ease-in-out infinite}
+.blob.b3{width:46vw;height:46vw;left:24vw;top:58vh;background:radial-gradient(circle,#c026d3,transparent 64%);animation:drift3 38s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(8vw,6vh,0) scale(1.15)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1.1)}50%{transform:translate3d(-7vw,10vh,0) scale(.92)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(.95)}50%{transform:translate3d(-10vw,-8vh,0) scale(1.18)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.05;
+  background-image:radial-gradient(rgba(255,255,255,.6) 1px,transparent 1px);background-size:3px 3px}
+main,header,footer{position:relative;z-index:2}
+
+/* ---------- nav ---------- */
+header{position:sticky;top:0;z-index:60;backdrop-filter:blur(14px);
+  background:linear-gradient(to bottom,rgba(10,6,22,.82),rgba(10,6,22,.35));
+  border-bottom:1px solid rgba(167,139,250,.12)}
+.nav{display:flex;align-items:center;gap:18px;height:68px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:700;letter-spacing:-.01em;text-decoration:none}
+.brand img{width:34px;height:34px;border-radius:10px;box-shadow:0 0 22px rgba(103,232,249,.35)}
+.nav-links{margin-left:auto;display:flex;gap:26px;align-items:center}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14.5px;position:relative;transition:color .25s}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;height:1.5px;width:0;
+  background:linear-gradient(90deg,var(--cyan),var(--magenta));transition:width .3s ease}
+.nav-links a:hover{color:#fff}
+.nav-links a:hover::after{width:100%}
+@media(max-width:760px){.nav-links a:not(.btn-mini){display:none}}
+.btn-mini{padding:9px 16px;border-radius:999px;border:1px solid var(--panel-line);
+  background:rgba(167,139,250,.12);color:#fff!important;font-size:14px}
+.btn-mini::after{display:none!important}
+.btn-mini:hover{background:rgba(167,139,250,.24)}
+
+/* ---------- hero ---------- */
+.hero{padding:86px 0 40px;display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+@media(max-width:940px){.hero{grid-template-columns:1fr;gap:44px;padding-top:56px;text-align:center}}
+.pill{display:inline-flex;align-items:center;gap:9px;padding:7px 15px;border-radius:999px;
+  border:1px solid var(--panel-line);background:rgba(255,255,255,.04);
+  font-size:13px;color:var(--muted);margin-bottom:24px}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 10px var(--cyan);animation:blink 2.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+h1{font-size:clamp(38px,5.6vw,62px)}
+.grad{background:linear-gradient(100deg,#67e8f9,#a78bfa 38%,#f0abfc 62%,#67e8f9);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:shimmer 9s linear infinite}
+@keyframes shimmer{to{background-position:220% 0}}
+.lede{margin-top:20px;font-size:18px;color:var(--muted);max-width:30em}
+@media(max-width:940px){.lede{margin-inline:auto}}
+.cta{display:flex;gap:14px;margin-top:34px;flex-wrap:wrap}
+@media(max-width:940px){.cta{justify-content:center}}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;border-radius:999px;
+  text-decoration:none;font-weight:600;font-size:15px;border:1px solid transparent;
+  transition:transform .25s cubic-bezier(.2,.8,.3,1),box-shadow .25s,background .25s}
+.play-ico{flex:0 0 20px;width:20px;height:20px}
+.btn-primary{color:#0a0616;background:linear-gradient(100deg,#a5f3fc,#c4b5fd 55%,#f5d0fe);
+  box-shadow:0 10px 34px rgba(167,139,250,.35)}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 16px 44px rgba(167,139,250,.5)}
+.btn-ghost{border-color:var(--panel-line);color:var(--text);background:rgba(255,255,255,.03)}
+.btn-ghost:hover{transform:translateY(-3px);background:rgba(255,255,255,.08)}
+.hero-note{margin-top:16px;font-size:13.5px;color:#7d75a0}
+
+/* ---------- phone mockup ---------- */
+.phone-stage{display:flex;flex-direction:column;align-items:center;perspective:1200px}
+.phone{position:relative;width:300px;height:610px;border-radius:44px;padding:11px;
+  background:linear-gradient(160deg,rgba(167,139,250,.55),rgba(103,232,249,.25) 45%,rgba(240,171,252,.4));
+  box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 60px rgba(124,58,237,.28);
+  animation:float 7s ease-in-out infinite;transform-style:preserve-3d}
+@keyframes float{0%,100%{transform:translateY(0) rotateY(-7deg) rotateX(2deg)}50%{transform:translateY(-16px) rotateY(-3deg) rotateX(0)}}
+.screen{position:relative;height:100%;border-radius:34px;overflow:hidden;
+  background:linear-gradient(180deg,#160d2c,#0b0718 70%)}
+.screen::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:92px;height:20px;border-radius:0 0 14px 14px;background:#0b0718;z-index:5}
+.sheen{position:absolute;inset:0;z-index:6;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.16) 47%,transparent 56%);
+  transform:translateX(-120%);animation:sheen 6.5s ease-in-out infinite}
+@keyframes sheen{0%,72%{transform:translateX(-120%)}92%,100%{transform:translateX(120%)}}
+/* the screen mirrors the app's own theme preview: artwork header, entry list, nav bar */
+.app{position:absolute;inset:0;display:flex;flex-direction:column;background:#0c0e12;color:#e2e5ef}
+.app-hero{position:relative;flex:0 0 40%;overflow:hidden;background:#0c0e12}
+.app-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+  transform:scale(1.12);transition:opacity 1s ease,transform 7s linear}
+.app-hero img.on{opacity:1;transform:scale(1)}
+.app-hero::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(12,14,18,.35) 0,transparent 30%,rgba(12,14,18,.92))}
+.theme-tag{position:absolute;left:12px;bottom:10px;z-index:2;font-size:9.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:#d6e4ff;background:rgba(12,14,18,.5);backdrop-filter:blur(6px);
+  border:1px solid rgba(214,228,255,.22);padding:4px 10px;border-radius:999px;transition:opacity .5s}
+.app-list{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.entry{display:flex;gap:12px;align-items:center;padding:12px 11px;border-radius:16px;
+  background:#12151c;border:1px solid rgba(226,229,239,.06);box-shadow:0 2px 8px rgba(0,0,0,.55);
+  animation:entryIn .6s cubic-bezier(.2,.8,.3,1) both;animation-delay:calc(var(--i)*.12s)}
+@keyframes entryIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.e-date{display:flex;flex-direction:column;align-items:center;padding:0 6px;color:#a8abb4;flex:0 0 auto}
+.e-date b{font-size:19px;font-weight:700;line-height:1.1;letter-spacing:-.02em}
+.e-date span{font-size:9.5px;opacity:.8}
+.e-body{flex:1;min-width:0}
+.e-head{display:flex;align-items:center;gap:8px}
+.e-head h4{flex:1;margin:0;font-size:12.5px;font-weight:600;color:#e2e5ef;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.e-mood{flex:0 0 26px;width:26px;height:26px;border-radius:50%;background:#3f5373;display:grid;place-items:center}
+.e-mood img{width:16px;height:16px}
+.e-text{margin:7px 0 0;font-size:10.5px;line-height:1.45;color:rgba(226,229,239,.9)}
+.e-shots{display:flex;gap:6px;margin-top:8px}
+.e-shots img{width:52px;height:52px;object-fit:cover;border-radius:8px;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.e-tags{display:flex;gap:6px;margin-top:8px}
+.e-tags span{font-size:8.5px;line-height:1;padding:5px 9px;border-radius:999px;
+  background:rgba(63,83,115,.7);color:#d6e4ff}
+.app-nav{flex:0 0 46px;display:flex;align-items:center;justify-content:space-around;
+  background:#171a1f;color:#a8abb4}
+.app-nav span{display:grid;place-items:center;width:52px;height:30px;border-radius:999px}
+.app-nav svg{width:17px;height:17px;display:block}
+.app-nav .act{background:#3f5373;color:#d6e4ff}
+.dots{display:flex;gap:7px;justify-content:center;margin-top:22px}
+.dots i{width:7px;height:7px;border-radius:50%;background:rgba(167,139,250,.3);transition:all .4s}
+.dots i.on{background:linear-gradient(120deg,var(--cyan),var(--magenta));width:20px;border-radius:999px;
+  box-shadow:0 0 12px rgba(103,232,249,.55)}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:70px 0 20px}
+@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{padding:24px 18px;border-radius:var(--radius);text-align:center;
+  border:1px solid var(--panel-line);background:var(--panel);backdrop-filter:blur(8px);
+  transition:transform .3s,border-color .3s}
+.stat:hover{transform:translateY(-5px);border-color:rgba(103,232,249,.5)}
+.stat .n{font-size:32px;font-weight:700;letter-spacing:-.03em;
+  background:linear-gradient(120deg,#67e8f9,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat .l{font-size:13px;color:var(--muted);margin-top:4px}
+
+/* ---------- sections ---------- */
+section{padding:88px 0}
+.sec-head{max-width:620px;margin-bottom:48px}
+.sec-head.center{margin-inline:auto;text-align:center}
+.kicker{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);
+  font-weight:600;margin-bottom:14px}
+h2{font-size:clamp(28px,3.6vw,42px)}
+.sec-head p{margin-top:16px;color:var(--muted);font-size:17px}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:940px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.grid{grid-template-columns:1fr}}
+.feat{position:relative;padding:28px;border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--panel-line);background:var(--panel);backdrop-filter:blur(8px);
+  transition:transform .35s cubic-bezier(.2,.8,.3,1),border-color .35s}
+.feat::before{content:"";position:absolute;width:260px;height:260px;left:var(--mx,50%);top:var(--my,50%);
+  transform:translate(-50%,-50%);border-radius:50%;opacity:0;transition:opacity .35s;
+  background:radial-gradient(circle,rgba(167,139,250,.28),transparent 68%);pointer-events:none}
+.feat:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.55)}
+.feat:hover::before{opacity:1}
+.feat .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,rgba(103,232,249,.18),rgba(240,171,252,.18));
+  border:1px solid rgba(255,255,255,.1);margin-bottom:18px}
+.feat h3{font-size:18px;margin-bottom:9px}
+.feat p{color:var(--muted);font-size:14.5px}
+
+/* ---------- marquee ---------- */
+.marquee{position:relative;overflow:hidden;margin:8px 0 0;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.track{display:flex;gap:12px;width:max-content;animation:scroll 46s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+.track.rev{animation-direction:reverse;margin-top:12px;animation-duration:54s}
+@keyframes scroll{to{transform:translateX(-50%)}}
+.tname{white-space:nowrap;font-size:13.5px;padding:9px 16px;border-radius:999px;color:#cfc7ea;
+  border:1px solid rgba(167,139,250,.2);background:rgba(255,255,255,.035)}
+
+/* ---------- privacy band ---------- */
+.band{border-radius:30px;padding:52px;border:1px solid var(--panel-line);
+  background:linear-gradient(140deg,rgba(103,232,249,.09),rgba(167,139,250,.07) 50%,rgba(240,171,252,.09));
+  backdrop-filter:blur(10px);display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center}
+@media(max-width:860px){.band{grid-template-columns:1fr;padding:34px}}
+.checks{list-style:none;padding:0;margin:24px 0 0;display:grid;gap:14px}
+.checks li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:#d3cce9}
+.checks svg{flex:0 0 20px;width:20px;height:20px;margin-top:3px}
+.vault{display:grid;place-items:center}
+.ring{position:relative;width:230px;height:230px;display:grid;place-items:center}
+.ring i{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(167,139,250,.28);
+  animation:spin 18s linear infinite}
+.ring i:nth-child(2){inset:22px;border-color:rgba(103,232,249,.3);animation-duration:13s;animation-direction:reverse}
+.ring i:nth-child(3){inset:44px;border-color:rgba(240,171,252,.3);animation-duration:22s}
+.ring i::after{content:"";position:absolute;top:-3px;left:50%;width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);box-shadow:0 0 14px var(--cyan)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ring img{width:112px;height:112px;border-radius:30px;box-shadow:0 0 50px rgba(124,58,237,.6)}
+
+/* ---------- steps ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;counter-reset:s}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+.step{padding:28px;border-radius:var(--radius);border:1px solid var(--panel-line);
+  background:var(--panel);position:relative;overflow:hidden}
+.step::after{counter-increment:s;content:"0" counter(s);position:absolute;right:16px;top:6px;
+  font-size:58px;font-weight:800;color:rgba(167,139,250,.13);letter-spacing:-.05em}
+.step h3{font-size:17px;margin-bottom:8px}
+.step p{color:var(--muted);font-size:14.5px}
+
+/* ---------- final cta ---------- */
+.final{text-align:center;padding:96px 0 88px}
+.final h2{max-width:14em;margin-inline:auto}
+.final p{color:var(--muted);margin-top:18px;font-size:17px}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid rgba(167,139,250,.14);padding:44px 0 56px;
+  background:linear-gradient(to bottom,transparent,rgba(167,139,250,.05))}
+.f-grid{display:flex;gap:28px;flex-wrap:wrap;align-items:center}
+.f-links{margin-left:auto;display:flex;gap:24px;flex-wrap:wrap}
+.f-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s}
+.f-links a:hover{color:var(--cyan)}
+.f-note{margin-top:26px;font-size:13px;color:#6f6890}
+
+/* ---------- reveal ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.8,.3,1),transform .8s cubic-bezier(.2,.8,.3,1)}
+.reveal.in{opacity:1;transform:none}
+.reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}
+.reveal.d3{transition-delay:.24s}.reveal.d4{transition-delay:.32s}.reveal.d5{transition-delay:.4s}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+  #stars{display:none}
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="aurora"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+<div class="grain"></div>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top"><img src="assets/icon.png" alt="Kuro app icon"> Kuro</a>
+    <nav class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#themes">Themes</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#support">Support</a>
+      <a class="btn-mini" href="#get">Get the app</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div>
+        <span class="pill reveal"><span class="dot"></span> Private diary &amp; journal for Android</span>
+        <h1 class="reveal d1">A diary <span class="grad">only you</span> can open.</h1>
+        <p class="lede reveal d2">Kuro keeps your days behind a PIN and your fingerprint. Write with photos, voice notes and moods, dress every page in one of 71 themes, and keep a backup in your own Google Drive.</p>
+        <div class="cta reveal d3">
+          <a class="btn btn-primary" href="#get">
+            <img class="play-ico" src="assets/ic_playstore.svg" alt="" width="20" height="20">
+            Get it on Google Play
+          </a>
+          <a class="btn btn-ghost" href="#features">See what's inside</a>
+        </div>
+        <p class="hero-note reveal d4">Free to use · No account needed to start · Works offline</p>
+      </div>
+
+      <div class="phone-stage reveal d2">
+        <div class="phone">
+          <div class="screen">
+            <div class="sheen"></div>
+            <div class="app">
+              <div class="app-hero">
+                <img class="on" src="assets/theme-starrygirl.webp" alt="Starry Girl theme artwork">
+                <img src="assets/theme-mooncity.webp" alt="Moon City theme artwork">
+                <img src="assets/theme-moonlitblue.webp" alt="Moonlit Blue theme artwork">
+                <span class="theme-tag" id="themeTag">Starry Girl</span>
+              </div>
+              <div class="app-list" id="appList">
+                <article class="entry" style="--i:0">
+                  <div class="e-date"><b class="e-day">06</b><span class="e-mon">Sep</span></div>
+                  <div class="e-body">
+                    <div class="e-head">
+                      <h4>A Sunny Day</h4>
+                      <span class="e-mood"><img src="assets/mood-calm.svg" alt="Mood: calm"></span>
+                    </div>
+                    <p class="e-text">Today was bright and cheerful!</p>
+                    <div class="e-tags"><span>sunny</span><span>happy</span></div>
+                  </div>
+                </article>
+                <article class="entry" style="--i:1">
+                  <div class="e-date"><b class="e-day">06</b><span class="e-mon">Sep</span></div>
+                  <div class="e-body">
+                    <div class="e-head">
+                      <h4>Rainy Reflection</h4>
+                      <span class="e-mood"><img src="assets/mood-calm.svg" alt="Mood: calm"></span>
+                    </div>
+                    <p class="e-text">Rain always makes me think deeper.</p>
+                    <div class="e-shots">
+                      <img src="assets/entry-1.webp" alt="">
+                      <img src="assets/entry-2.webp" alt="">
+                    </div>
+                    <div class="e-tags"><span>rain</span><span>thoughtful</span></div>
+                  </div>
+                </article>
+              </div>
+              <div class="app-nav">
+                <span class="act"><svg viewBox="0 0 960 960" aria-hidden="true"><path fill="currentColor" d="M240,880Q190,880 155,845Q120,810 120,760L120,200Q120,150 155,115Q190,80 240,80L600,80Q633,80 656.5,103.5Q680,127 680,160L680,640Q680,673 656.5,696.5Q633,720 600,720L240,720Q223,720 211.5,731.5Q200,743 200,760Q200,777 211.5,788.5Q223,800 240,800L760,800Q760,800 760,800Q760,800 760,800L760,200Q760,183 771.5,171.5Q783,160 800,160Q817,160 828.5,171.5Q840,183 840,200L840,800Q840,833 816.5,856.5Q793,880 760,880L240,880ZM240,640L600,640Q600,640 600,640Q600,640 600,640L600,160Q600,160 600,160Q600,160 600,160L240,160Q223,160 211.5,171.5Q200,183 200,200L200,647Q210,644 219.5,642Q229,640 240,640ZM302,540Q310,540 315.5,536Q321,532 323,525L344,468L457,468L477,525Q479,532 485,536Q491,540 498,540Q510,540 517,530Q524,520 519,509L431,275Q429,268 423,264Q417,260 409,260L391,260Q383,260 377,264Q371,268 369,275L281,510Q277,521 283.5,530.5Q290,540 302,540ZM358,428L399,312L401,312L442,428L358,428ZM200,647Q200,647 200,647Q200,647 200,647L200,200Q200,183 200,171.5Q200,160 200,160L200,160Q200,160 200,160Q200,160 200,160L200,647Q200,647 200,647Q200,647 200,647Z"/></svg></span>
+                <span><svg viewBox="0 0 960 960" aria-hidden="true"><path fill="currentColor" d="M200,880Q167,880 143.5,856.5Q120,833 120,800L120,240Q120,207 143.5,183.5Q167,160 200,160L240,160L240,120Q240,103 251.5,91.5Q263,80 280,80Q297,80 308.5,91.5Q320,103 320,120L320,160L640,160L640,120Q640,103 651.5,91.5Q663,80 680,80Q697,80 708.5,91.5Q720,103 720,120L720,160L760,160Q793,160 816.5,183.5Q840,207 840,240L840,800Q840,833 816.5,856.5Q793,880 760,880L200,880ZM200,800L760,800Q760,800 760,800Q760,800 760,800L760,400L200,400L200,800Q200,800 200,800Q200,800 200,800ZM200,320L760,320L760,240Q760,240 760,240Q760,240 760,240L200,240Q200,240 200,240Q200,240 200,240L200,320ZM200,320L200,240Q200,240 200,240Q200,240 200,240L200,240Q200,240 200,240Q200,240 200,240L200,320ZM480,560Q463,560 451.5,548.5Q440,537 440,520Q440,503 451.5,491.5Q463,480 480,480Q497,480 508.5,491.5Q520,503 520,520Q520,537 508.5,548.5Q497,560 480,560ZM320,560Q303,560 291.5,548.5Q280,537 280,520Q280,503 291.5,491.5Q303,480 320,480Q337,480 348.5,491.5Q360,503 360,520Q360,537 348.5,548.5Q337,560 320,560ZM640,560Q623,560 611.5,548.5Q600,537 600,520Q600,503 611.5,491.5Q623,480 640,480Q657,480 668.5,491.5Q680,503 680,520Q680,537 668.5,548.5Q657,560 640,560ZM480,720Q463,720 451.5,708.5Q440,697 440,680Q440,663 451.5,651.5Q463,640 480,640Q497,640 508.5,651.5Q520,663 520,680Q520,697 508.5,708.5Q497,720 480,720ZM320,720Q303,720 291.5,708.5Q280,697 280,680Q280,663 291.5,651.5Q303,640 320,640Q337,640 348.5,651.5Q360,663 360,680Q360,697 348.5,708.5Q337,720 320,720ZM640,720Q623,720 611.5,708.5Q600,697 600,680Q600,663 611.5,651.5Q623,640 640,640Q657,640 668.5,651.5Q680,663 680,680Q680,697 668.5,708.5Q657,720 640,720Z"/></svg></span>
+                <span><svg viewBox="0 0 960 960" aria-hidden="true"><path fill="currentColor" d="M80,720v-32q0,-34 17,-62.5t47,-43.5q57,-29 118.5,-46T388,519q14,0 22,12.5t3,26.5q-6,21 -9,42t-3,43q0,29 6,56t17,53q8,17 -1.5,32.5T396,800L160,800q-33,0 -56.5,-23.5T80,720ZM680,720q33,0 56.5,-23.5T760,640q0,-33 -23.5,-56.5T680,560q-33,0 -56.5,23.5T600,640q0,33 23.5,56.5T680,720ZM400,480q-66,0 -113,-47t-47,-113q0,-66 47,-113t113,-47q66,0 113,47t47,113q0,66 -47,113t-113,47ZM634,808 L628,780q-12,-5 -22.5,-10.5T584,756l-29,9q-13,4 -25.5,-1T510,748l-8,-14q-7,-12 -5,-26t13,-23l22,-19q-2,-14 -2,-26t2,-26l-22,-19q-11,-9 -13,-22.5t5,-25.5l9,-15q7,-11 19,-16t25,-1l29,9q11,-8 21.5,-13.5T628,500l6,-29q3,-14 13.5,-22.5T672,440h16q14,0 24.5,9t13.5,23l6,28q12,5 22.5,11t21.5,15l27,-9q14,-5 27,0t20,17l8,14q7,12 5,26t-13,23l-22,19q2,12 2,25t-2,25l22,19q11,9 13,22.5t-5,25.5l-9,15q-7,11 -19,16t-25,1l-29,-9q-11,8 -21.5,13.5T732,780l-6,29q-3,14 -13.5,22.5T688,840h-16q-14,0 -24.5,-9T634,808Z"/></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat reveal"><div class="n" data-count="71">0</div><div class="l">Handmade themes</div></div>
+      <div class="stat reveal d1"><div class="n" data-count="500" data-suffix="+">0</div><div class="l">Stickers &amp; bullets</div></div>
+      <div class="stat reveal d2"><div class="n" data-count="120" data-suffix="+">0</div><div class="l">Mood icons</div></div>
+      <div class="stat reveal d3"><div class="n" data-count="100" data-suffix="%">0</div><div class="l">Stored on your device</div></div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <div class="kicker">What's inside</div>
+        <h2>Everything a diary should be — and nothing it shouldn't.</h2>
+        <p>Kuro is built around one idea: writing about your day should feel safe, quick and a little bit beautiful.</p>
+      </div>
+      <div class="grid">
+        <article class="feat reveal">
+          <div class="ico">🔒</div>
+          <h3>PIN &amp; fingerprint lock</h3>
+          <p>Set a 4-digit PIN and unlock with biometrics. The lock is checked on the device — no password ever leaves your phone.</p>
+        </article>
+        <article class="feat reveal d1">
+          <div class="ico">🎨</div>
+          <h3>71 illustrated themes</h3>
+          <p>Moon cities, sleepy cats, paper blooms and starry skies. Every theme restyles fonts, colours and paper in one tap.</p>
+        </article>
+        <article class="feat reveal d2">
+          <div class="ico">🌈</div>
+          <h3>Moods &amp; tags</h3>
+          <p>Pick a mood style you like, tag your entries, and watch the pattern of your weeks appear on its own.</p>
+        </article>
+        <article class="feat reveal d3">
+          <div class="ico">🎙️</div>
+          <h3>Photos &amp; voice notes</h3>
+          <p>Some days are easier to say out loud. Attach pictures and record a note straight into the entry.</p>
+        </article>
+        <article class="feat reveal d4">
+          <div class="ico">📅</div>
+          <h3>Calendar &amp; search</h3>
+          <p>Jump to any date, or find that one evening by a single word you remember writing.</p>
+        </article>
+        <article class="feat reveal d5">
+          <div class="ico">☁️</div>
+          <h3>Backup to your Drive</h3>
+          <p>One tap saves an encrypted-at-rest archive to a private app folder in <em>your</em> Google Drive. Restore it on a new phone.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- THEMES -->
+  <section id="themes" style="padding-top:20px">
+    <div class="wrap">
+      <div class="sec-head center reveal">
+        <div class="kicker">Themes</div>
+        <h2>Seventy-one moods to write in.</h2>
+        <p>Change the whole diary — paper, palette and typeface — whenever your mood does.</p>
+      </div>
+    </div>
+    <div class="marquee reveal">
+      <div class="track" id="t1"></div>
+      <div class="track rev" id="t2"></div>
+    </div>
+  </section>
+
+  <!-- PRIVACY -->
+  <section id="privacy">
+    <div class="wrap">
+      <div class="band reveal">
+        <div>
+          <div class="kicker">Your data</div>
+          <h2>It stays yours. Always.</h2>
+          <ul class="checks">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Entries, photos and recordings live in the app's private storage on your phone.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>We never upload your diary to our servers — we don't run any.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Backups use the <code>drive.appdata</code> scope: a hidden folder only Kuro can see, inside your own Google Drive.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Sign-in is optional. Skip Drive and the app still works, forever, offline.</span></li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="#67e8f9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Sign out or revoke access any time and the connection is gone.</span></li>
+          </ul>
+          <div class="cta" style="margin-top:30px">
+            <a class="btn btn-ghost" href="privacy.html">Read the privacy policy</a>
+          </div>
+        </div>
+        <div class="vault">
+          <div class="ring"><i></i><i></i><i></i><img src="assets/icon.png" alt="Kuro icon"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head center reveal">
+        <div class="kicker">How it works</div>
+        <h2>Three minutes to your first entry.</h2>
+      </div>
+      <div class="steps">
+        <div class="step reveal"><h3>Lock it</h3><p>Choose a PIN and turn on fingerprint unlock. Only you get past the cover.</p></div>
+        <div class="step reveal d1"><h3>Write it</h3><p>Pick a mood, type a few lines, drop in a photo or a voice note. That's a day saved.</p></div>
+        <div class="step reveal d2"><h3>Keep it</h3><p>Turn on Drive backup so a new phone is just a restore away.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section id="get" class="final">
+    <div class="wrap">
+      <h2 class="reveal">Your story deserves a <span class="grad">safe place</span>.</h2>
+      <p class="reveal d1">Kuro: Private Diary Journal is free on Google Play.</p>
+      <div class="cta reveal d2" style="justify-content:center;margin-top:34px">
+        <a class="btn btn-primary" href="https://play.google.com/store/apps/details?id=com.shura.studios.diary">
+          <img class="play-ico" src="assets/ic_playstore.svg" alt="" width="20" height="20">
+          Get it on Google Play
+        </a>
+      </div>
+      <p class="hero-note reveal d3">Android 10 and above · com.shura.studios.diary</p>
+    </div>
+  </section>
+</main>
+
+<footer id="support">
+  <div class="wrap">
+    <div class="f-grid">
+      <a class="brand" href="#top"><img src="assets/icon.png" alt=""> Kuro: Private Diary Journal</a>
+      <nav class="f-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="#features">Features</a>
+        <a href="mailto:shurastudios@gmail.com">Contact support</a>
+      </nav>
+    </div>
+    <p class="f-note">© <span id="yr">2026</span> Shura Studios. Kuro: Private Diary Journal. Google Play and the Google Play logo are trademarks of Google LLC.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* year */
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  /* ---- starfield ---- */
+  var cv = document.getElementById('stars');
+  if (cv && !reduce) {
+    var ctx = cv.getContext('2d'), stars = [], w, h, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    function resize(){
+      w = cv.width = innerWidth * dpr; h = cv.height = innerHeight * dpr;
+      cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+      var n = Math.min(160, Math.round(innerWidth * innerHeight / 12000));
+      stars = [];
+      for (var i = 0; i < n; i++) stars.push({
+        x: Math.random() * w, y: Math.random() * h,
+        r: (Math.random() * 1.3 + .3) * dpr,
+        a: Math.random(), s: Math.random() * .016 + .004,
+        d: Math.random() * .05 * dpr + .01
+      });
+    }
+    var hue = ['103,232,249','167,139,250','240,171,252','253,230,138'];
+    function draw(){
+      ctx.clearRect(0, 0, w, h);
+      for (var i = 0; i < stars.length; i++) {
+        var st = stars[i];
+        st.a += st.s; var o = .25 + Math.abs(Math.sin(st.a)) * .75;
+        st.y += st.d; if (st.y > h) { st.y = -2; st.x = Math.random() * w; }
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(' + hue[i % 4] + ',' + o.toFixed(3) + ')';
+        ctx.arc(st.x, st.y, st.r, 0, 6.283);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    resize(); draw();
+    addEventListener('resize', resize);
+  }
+
+  /* ---- scroll reveal ---- */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .15, rootMargin: '0px 0px -40px' });
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  /* ---- count up ---- */
+  var cio = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (!e.isIntersecting) return;
+      cio.unobserve(e.target);
+      var el = e.target, to = +el.dataset.count, sfx = el.dataset.suffix || '', t0 = null;
+      if (reduce) { el.textContent = to + sfx; return; }
+      requestAnimationFrame(function step(t){
+        if (!t0) t0 = t;
+        var p = Math.min((t - t0) / 1400, 1), e2 = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(to * e2) + sfx;
+        if (p < 1) requestAnimationFrame(step);
+      });
+    });
+  }, { threshold: .6 });
+  document.querySelectorAll('[data-count]').forEach(function(el){ cio.observe(el); });
+
+  /* ---- theme marquee ---- */
+  var names = ["Moon City","Sleepy Cats","Paper Bloom","Starry Girl","Midnight Bloom","Neon Paper","Lily Bath","Ocean Bench","Forest Spirit","Sunflower Cat","Rose Noir","Study Cat","Sky Island","Rainbow Falls","Lofi Desk","Fuji Field","Pier White","Duck Pond","Blossom Line","Starlit Keep","Water Lily","Sunset Isle","Petal Rest","Gallery Date","Bubble Cat","Dragon Ink","Hillside Van","Isle Beach","Pool Float","Postbox Cat","Scarlet Ritual","Sea Terrace","Signal Sky","Skyline Wish","Yellow Cat","Concrete Muse","Dawn Blush","Graffiti Rose","Green Delta","Meadow Read","Night Desk","Paper Doll","Rain Umbrella"];
+  function fill(id, list){
+    var el = document.getElementById(id);
+    if (!el) return;
+    var html = list.map(function(n){ return '<span class="tname">' + n + '</span>'; }).join('');
+    el.innerHTML = html + html; /* duplicated for a seamless loop */
+  }
+  fill('t1', names.slice(0, 22));
+  fill('t2', names.slice(22));
+
+  /* ---- theme pager: same three-card rotation the app's theme preview shows ---- */
+  (function(){
+    var shots = document.querySelectorAll('.app-hero img'),
+        dots  = document.querySelectorAll('#dots i'),
+        tag   = document.getElementById('themeTag'),
+        list  = document.getElementById('appList'),
+        names = ['Starry Girl', 'Moon City', 'Moonlit Blue'],
+        cur   = 0;
+    if (!shots.length || reduce) return;
+    setInterval(function(){
+      cur = (cur + 1) % shots.length;
+      shots.forEach(function(im, k){ im.classList.toggle('on', k === cur); });
+      dots.forEach(function(d, k){ d.classList.toggle('on', k === cur); });
+      tag.style.opacity = 0;
+      setTimeout(function(){ tag.textContent = names[cur]; tag.style.opacity = 1; }, 300);
+      /* replay the entry stagger so the list settles in like a freshly opened page */
+      list.querySelectorAll('.entry').forEach(function(e){
+        e.style.animation = 'none'; void e.offsetWidth; e.style.animation = '';
+      });
+    }, 4600);
+  })();
+
+  /* ---- the sample entries carry today's date, exactly as the app's preview does ---- */
+  (function(){
+    var d = new Date(),
+        day = String(d.getDate()).padStart(2, '0'),
+        mon = d.toLocaleDateString(undefined, { month: 'short' });
+    document.querySelectorAll('.e-day').forEach(function(el){ el.textContent = day; });
+    document.querySelectorAll('.e-mon').forEach(function(el){ el.textContent = mon; });
+  })();
+
+  /* ---- cursor glow on feature cards ---- */
+  document.querySelectorAll('.feat').forEach(function(card){
+    card.addEventListener('pointermove', function(ev){
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (ev.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (ev.clientY - r.top) + 'px');
+    });
+  });
+})();
+</script>
+</body>
+</html>
